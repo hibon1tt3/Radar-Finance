@@ -9,24 +9,42 @@ import SwiftUI
 import SwiftData
 
 @main
-struct Radar_FinanceApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
+struct Radar_CheckbookApp: App {
+    @StateObject private var authService = AuthenticationService()
+    let container: ModelContainer
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ParentView()
+                .modelContainer(container)
+                .environmentObject(authService)
+                .preferredColorScheme(.light)
         }
-        .modelContainer(sharedModelContainer)
+    }
+    
+    init() {
+        let schema = Schema([
+            Account.self,
+            Transaction.self,
+            Category.self,
+            Schedule.self
+        ])
+        
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            allowsSave: true
+        )
+        
+        do {
+            container = try ModelContainer(
+                for: schema,
+                configurations: [modelConfiguration]
+            )
+            // Create default categories if none exist
+            CategoryService.createDefaultCategories(in: container.mainContext)
+        } catch {
+            fatalError("Could not initialize ModelContainer")
+        }
     }
 }
