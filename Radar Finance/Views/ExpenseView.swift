@@ -30,6 +30,8 @@ struct ExpenseView: View {
                     deleteTransactions(at: indexSet)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Expenses")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -49,8 +51,6 @@ struct ExpenseView: View {
                     .modelContainer(modelContext.container)
             }
         }
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
     }
     
     private func deleteTransactions(at offsets: IndexSet) {

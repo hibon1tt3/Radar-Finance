@@ -55,82 +55,83 @@ struct CalendarReportView: View {
     
     var body: some View {
         ScrollView {
-            if accounts.isEmpty {
-                NoAccountsView(showingAddAccount: $showingAddAccount)
-            } else {
-                VStack(spacing: 20) {
-                    // Account Picker
-                    AccountPickerView(selectedAccount: $selectedAccount)
+            VStack {
+                if accounts.isEmpty {
+                    NoAccountsView(showingAddAccount: $showingAddAccount)
+                } else {
+                    VStack(spacing: 20) {
+                        // Account Picker
+                        AccountPickerView(selectedAccount: $selectedAccount)
+                            .padding()
+                            .background(Color(.systemBackground))
+                            .cornerRadius(10)
+                            .shadow(radius: 2)
+                            .padding(.horizontal)
+                        
+                        // Custom Calendar View
+                        CustomCalendarView(
+                            selectedDate: $selectedDate,
+                            displayedMonth: $displayedMonth,
+                            markedDates: markedDays
+                        )
                         .padding()
                         .background(Color(.systemBackground))
                         .cornerRadius(10)
                         .shadow(radius: 2)
                         .padding(.horizontal)
-                    
-                    // Custom Calendar View
-                    CustomCalendarView(
-                        selectedDate: $selectedDate,
-                        displayedMonth: $displayedMonth,
-                        markedDates: markedDays
-                    )
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .cornerRadius(10)
-                    .shadow(radius: 2)
-                    .padding(.horizontal)
-                    
-                    // Selected Day Transactions List
-                    if let dayTransactions = selectedDayTransactions,
-                       dayTransactions.hasTransactions {
-                        VStack(alignment: .leading, spacing: 4) {
-                            // Keep the header with date and totals
-                            Text(dayTransactions.date.formatted(.dateTime.month().day().weekday()))
-                                .font(.headline)
-                            
+                        
+                        // Selected Day Transactions List
+                        if let dayTransactions = selectedDayTransactions,
+                           dayTransactions.hasTransactions {
                             VStack(alignment: .leading, spacing: 4) {
-                                if dayTransactions.totalIncome > 0 {
-                                    Text("Income: \(dayTransactions.totalIncome.formatted(.currency(code: "USD")))")
-                                        .foregroundColor(.green)
+                                // Keep the header with date and totals
+                                Text(dayTransactions.date.formatted(.dateTime.month().day().weekday()))
+                                    .font(.headline)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    if dayTransactions.totalIncome > 0 {
+                                        Text("Income: \(dayTransactions.totalIncome.formatted(.currency(code: "USD")))")
+                                            .foregroundColor(.green)
+                                    }
+                                    if dayTransactions.totalExpenses > 0 {
+                                        Text("Expenses: \(dayTransactions.totalExpenses.formatted(.currency(code: "USD")))")
+                                            .foregroundColor(.red)
+                                    }
                                 }
-                                if dayTransactions.totalExpenses > 0 {
-                                    Text("Expenses: \(dayTransactions.totalExpenses.formatted(.currency(code: "USD")))")
-                                        .foregroundColor(.red)
-                                }
-                            }
-                            
-                            // Add a divider between header and transactions
-                            Divider()
-                                .padding(.vertical, 4)
-                            
-                            // Transactions list styled like expenses view
-                            VStack(spacing: 0) {
-                                ForEach(dayTransactions.transactions) { occurrence in
-                                    if let transaction = occurrence.transaction {
-                                        TransactionRowView(
-                                            transaction: transaction,
-                                            showOccurrenceDate: true,
-                                            occurrenceDate: occurrence.dueDate
-                                        )
-                                        
-                                        if occurrence.id != dayTransactions.transactions.last?.id {
-                                            Divider()
+                                
+                                // Add a divider between header and transactions
+                                Divider()
+                                    .padding(.vertical, 4)
+                                
+                                // Transactions list styled like expenses view
+                                VStack(spacing: 0) {
+                                    ForEach(dayTransactions.transactions) { occurrence in
+                                        if let transaction = occurrence.transaction {
+                                            TransactionRowView(
+                                                transaction: transaction,
+                                                showOccurrenceDate: true,
+                                                occurrenceDate: occurrence.dueDate
+                                            )
+                                            
+                                            if occurrence.id != dayTransactions.transactions.last?.id {
+                                                Divider()
+                                            }
                                         }
                                     }
                                 }
                             }
+                            .padding()
+                            .background(Color(.systemBackground))
+                            .cornerRadius(10)
+                            .shadow(radius: 2)
+                            .padding(.horizontal)
                         }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(10)
-                        .shadow(radius: 2)
-                        .padding(.horizontal)
                     }
                 }
             }
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("Calendar")
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
         .onAppear {
             if selectedAccount == nil && !accounts.isEmpty {
                 selectedAccount = defaultAccount ?? accounts[0]

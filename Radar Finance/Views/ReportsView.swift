@@ -154,7 +154,5 @@ struct ReportsView: View {
                 AccountListView()
             }
         }
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
     }
 } 

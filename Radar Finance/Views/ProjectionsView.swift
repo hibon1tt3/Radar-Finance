@@ -106,134 +106,6 @@ struct ProjectionsView: View {
         return projections
     }
     
-    private struct ChartOverlayView: View {
-        let proxy: ChartProxy
-        let geometry: GeometryProxy
-        let projections: [ProjectionsView.MonthlyProjection]
-        @Binding var selectedPoint: ProjectionsView.MonthlyProjection?
-        
-        var body: some View {
-            Rectangle()
-                .fill(.clear)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            let currentX = value.location.x
-                            if let index = proxy.value(atX: currentX, as: String.self),
-                               let projection = projections.first(where: { $0.shortMonth == index }) {
-                                selectedPoint = projection
-                            }
-                        }
-                        .onEnded { _ in
-                            selectedPoint = nil
-                        }
-                )
-                .overlay {
-                    if let selectedPoint {
-                        ChartTooltip(
-                            proxy: proxy,
-                            geometry: geometry,
-                            selectedPoint: selectedPoint
-                        )
-                    }
-                }
-        }
-    }
-    
-    private struct ChartTooltip: View {
-        let proxy: ChartProxy
-        let geometry: GeometryProxy
-        let selectedPoint: ProjectionsView.MonthlyProjection
-        
-        var body: some View {
-            let xPosition = proxy.position(forX: selectedPoint.shortMonth) ?? 0
-            let tooltipWidth: CGFloat = 160
-            let tooltipHeight: CGFloat = 60
-            let tooltipTopPadding: CGFloat = geometry.size.height * 0.2
-            let horizontalPadding: CGFloat = 40
-            
-            let xOffset = min(
-                max(-horizontalPadding, xPosition - tooltipWidth/2),
-                geometry.size.width - tooltipWidth + horizontalPadding
-            )
-            
-            ZStack {
-                // Full height connecting line
-                Rectangle()
-                    .fill(.gray.opacity(0.5))
-                    .frame(width: 1)
-                    .frame(height: geometry.size.height)
-                    .position(x: xPosition, y: geometry.size.height/2)
-                
-                // Tooltip
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(selectedPoint.formattedMonth)
-                        .font(.caption.bold())
-                    Text(selectedPoint.projectedBalance.formatted(.currency(code: "USD")))
-                        .font(.caption)
-                        .foregroundColor(selectedPoint.projectedBalance >= 0 ? .green : .red)
-                }
-                .padding(8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.systemBackground))
-                        .shadow(radius: 2)
-                )
-                .frame(width: tooltipWidth, height: tooltipHeight)
-                .position(
-                    x: xOffset + tooltipWidth/2,
-                    y: tooltipTopPadding
-                )
-            }
-        }
-    }
-    
-    private struct BalanceProjectionChart: View {
-        let projections: [ProjectionsView.MonthlyProjection]
-        @Binding var selectedPoint: ProjectionsView.MonthlyProjection?
-        
-        var body: some View {
-            VStack(alignment: .leading) {
-                Text("Balance Projection")
-                    .font(.headline)
-                
-                Chart {
-                    ForEach(projections) { projection in
-                        LineMark(
-                            x: .value("Month", projection.shortMonth),
-                            y: .value("Balance", Double(truncating: projection.projectedBalance as NSDecimalNumber))
-                        )
-                        .foregroundStyle(.green)
-                        
-                        PointMark(
-                            x: .value("Month", projection.shortMonth),
-                            y: .value("Balance", Double(truncating: projection.projectedBalance as NSDecimalNumber))
-                        )
-                        .foregroundStyle(.green)
-                    }
-                }
-                .frame(height: 200)
-                .chartOverlay { proxy in
-                    GeometryReader { geometry in
-                        ChartOverlayView(
-                            proxy: proxy,
-                            geometry: geometry,
-                            projections: projections,
-                            selectedPoint: $selectedPoint
-                        )
-                    }
-                }
-                .animation(.smooth, value: selectedPoint)
-            }
-            .padding()
-            .background(Color(.systemBackground))
-            .cornerRadius(10)
-            .shadow(radius: 2)
-            .padding(.horizontal)
-        }
-    }
-    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -256,12 +128,6 @@ struct ProjectionsView: View {
                             
                             if selectedAccount != nil {
                                 let projections = getProjections()
-                                
-                                // Balance Projection Chart
-                                BalanceProjectionChart(
-                                    projections: projections,
-                                    selectedPoint: $selectedPoint
-                                )
                                 
                                 // Monthly Projections List
                                 ForEach(projections) { projection in
@@ -308,13 +174,12 @@ struct ProjectionsView: View {
                     }
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Projections")
-        }
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
-        .onAppear {
-            if selectedAccount == nil && !accounts.isEmpty {
-                selectedAccount = defaultAccount ?? accounts[0]
+            .onAppear {
+                if selectedAccount == nil && !accounts.isEmpty {
+                    selectedAccount = defaultAccount ?? accounts[0]
+                }
             }
         }
     }

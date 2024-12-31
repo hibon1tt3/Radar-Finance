@@ -69,7 +69,6 @@ struct SettingsView: View {
                     }
                 }
             }
-            .scrollContentBackground(.hidden)
             .navigationTitle("Settings")
             .alert("Reset App Data", isPresented: $showingResetAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -103,7 +102,6 @@ struct SettingsView: View {
                 )
             }
         }
-        .animatedBackground()
     }
     
     private func resetAppData() {

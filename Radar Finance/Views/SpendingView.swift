@@ -190,13 +190,12 @@ struct SpendingView: View {
                     }
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Spending")
-        }
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
-        .onAppear {
-            if selectedAccount == nil && !accounts.isEmpty {
-                selectedAccount = defaultAccount ?? accounts[0]
+            .onAppear {
+                if selectedAccount == nil && !accounts.isEmpty {
+                    selectedAccount = defaultAccount ?? accounts[0]
+                }
             }
         }
     }

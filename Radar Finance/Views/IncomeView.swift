@@ -23,6 +23,8 @@ struct IncomeView: View {
                     deleteTransactions(at: indexSet)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Income")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -42,8 +44,6 @@ struct IncomeView: View {
                     .modelContainer(modelContext.container)
             }
         }
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
     }
     
     var activeTransactions: [Transaction] {

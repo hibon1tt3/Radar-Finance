@@ -129,6 +129,7 @@ struct LedgerView: View {
                     }
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Ledger")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -140,8 +141,6 @@ struct LedgerView: View {
                 }
             }
         }
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
         .sheet(item: $selectedTransaction) { transaction in
             TransactionDetailView(transaction: transaction)
         }

@@ -374,6 +374,7 @@ struct DashboardView: View {
                     .padding(.horizontal)
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Dashboard")
             .sheet(isPresented: $showingAddAccount) {
                 AddAccountView()
@@ -411,8 +412,6 @@ struct DashboardView: View {
                 QuickTransactionView(transactionType: sheet.type)
             }
         }
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
         .onAppear {
             updateUpcomingTransactions()
         }

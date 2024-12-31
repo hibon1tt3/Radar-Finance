@@ -244,13 +244,12 @@ struct CashFlowView: View {
                     }
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Cash Flow")
-        }
-        .scrollContentBackground(.hidden)
-        .animatedBackground()
-        .onAppear {
-            if selectedAccount == nil && !accounts.isEmpty {
-                selectedAccount = defaultAccount ?? accounts[0]
+            .onAppear {
+                if selectedAccount == nil && !accounts.isEmpty {
+                    selectedAccount = defaultAccount ?? accounts[0]
+                }
             }
         }
     }
