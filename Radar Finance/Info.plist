@@ -8,12 +8,6 @@
     </array>
     <key>NSCameraUsageDescription</key>
     <string>This app requires access to the camera to take photos for receipts.</string>
-    <key>NSCameraUsageDescription</key>
-    <string>We need camera access to scan documents and QR codes</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>We need photo library access to save and upload documents</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>We need your location to find nearby services</string>
     <key>NSFaceIDUsageDescription</key>
     <string>We use Face ID to securely authenticate you</string>
 </dict>
