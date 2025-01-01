@@ -9,8 +9,6 @@ struct ProjectionsView: View {
     @State private var selectedAccount: Account?
     @State private var selectedPoint: MonthlyProjection?
     
-    @EnvironmentObject private var viewModel: AppState
-    
     private struct MonthlyProjection: Identifiable, Equatable {
         let id = UUID()
         let month: Date

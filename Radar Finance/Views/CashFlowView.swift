@@ -8,8 +8,6 @@ struct CashFlowView: View {
     @State private var selectedMonth: Date = Date()
     @State private var selectedAccount: Account?
     
-    @EnvironmentObject private var viewModel: AppState
-    
     private var defaultAccount: Account? {
         accounts.first { $0.isDefault }
     }

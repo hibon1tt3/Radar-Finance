@@ -7,8 +7,6 @@ struct TransactionDetailView: View {
     let transaction: Transaction
     @State private var showingImage = false // For full-screen image view
     @State private var showingDeleteAlert = false
-    @EnvironmentObject private var viewModel: AppState
-    @State private var showingEditSheet = false
     
     var body: some View {
         NavigationStack {
@@ -72,11 +70,6 @@ struct TransactionDetailView: View {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Edit") {
-                        showingEditSheet = true
-                    }
-                }
             }
         }
         .fullScreenCover(isPresented: $showingImage) {
@@ -103,38 +96,22 @@ struct TransactionDetailView: View {
         } message: {
             Text("Are you sure you want to delete this transaction? This action cannot be undone.")
         }
-        .sheet(isPresented: $showingEditSheet) {
-            EditTransactionView(transaction: transaction)
-        }
     }
     
     private func deleteTransaction() {
-        Task {
-            do {
-                // First delete from CloudKit
-                let success = try await CloudKitSyncService.shared.handleModelDeletion(transaction)
-                
-                if success {
-                    // Revert the balance change
-                    if let account = transaction.account {
-                        if transaction.type == .income {
-                            account.balance -= transaction.amount
-                        } else {
-                            account.balance += transaction.amount
-                        }
-                    }
-                    
-                    // Then delete locally
-                    modelContext.delete(transaction)
-                    try? modelContext.save()
-                    HapticManager.shared.notification(type: .success)
-                    dismiss()
-                }
-            } catch {
-                print("Failed to delete transaction: \(error)")
-                // Show error to user
+        // Revert the balance change
+        if let account = transaction.account {
+            if transaction.type == .income {
+                account.balance -= transaction.amount
+            } else {
+                account.balance += transaction.amount
             }
         }
+        
+        modelContext.delete(transaction)
+        try? modelContext.save()
+        HapticManager.shared.notification(type: .success)
+        dismiss()
     }
 }
 
@@ -164,32 +141,5 @@ struct ZoomableImageView: View {
                 )
         }
         .background(Color(.systemBackground))
-    }
-}
-
-struct CategoryPicker: View {
-    @Binding var selectedCategory: Category?
-    @Query private var categories: [Category]
-    let transactionType: TransactionType
-    
-    var body: some View {
-        Picker("Category", selection: $selectedCategory) {
-            Text("None").tag(nil as Category?)
-            
-            // Show both system and custom categories, grouped by type
-            ForEach(categories.filter { $0.type == transactionType }) { category in
-                HStack {
-                    Image(systemName: category.icon)
-                        .foregroundColor(Color(hex: category.color))
-                    Text(category.name)
-                    if category.isSystem {
-                        Spacer()
-                        Text("System")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }.tag(category as Category?)
-            }
-        }
     }
 } 

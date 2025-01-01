@@ -120,33 +120,4 @@ struct EditAccountView: View {
             }
         }
     }
-    
-    private func deleteAccount() {
-        Task {
-            do {
-                // First, delete all associated transactions from CloudKit
-                for transaction in account.transactions {
-                    let success = try await CloudKitSyncService.shared.handleModelDeletion(transaction)
-                    if success {
-                        modelContext.delete(transaction)
-                    } else {
-                        print("Failed to delete transaction: \(transaction.title)")
-                    }
-                }
-                
-                // Then delete the account from CloudKit
-                let success = try await CloudKitSyncService.shared.handleModelDeletion(account)
-                
-                if success {
-                    modelContext.delete(account)
-                    try modelContext.save()
-                    dismiss()
-                } else {
-                    print("Failed to delete account from CloudKit")
-                }
-            } catch {
-                print("Error deleting account: \(error)")
-            }
-        }
-    }
 } 

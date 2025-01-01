@@ -70,39 +70,25 @@ struct AccountListView: View {
     }
     
     private func deleteAccount(_ account: Account) {
-        Task {
-            do {
-                // First handle any scheduled transactions
-                let scheduledTransactions = transactions.filter { 
-                    $0.account?.id == account.id && 
-                    $0.schedule != nil 
-                }
-                
-                // Delete schedules first to avoid orphaned schedules
-                for transaction in scheduledTransactions {
-                    if let schedule = transaction.schedule {
-                        modelContext.delete(schedule)
-                        transaction.schedule = nil
-                    }
-                }
-                
-                // Delete associated transactions from CloudKit
-                for transaction in account.transactions {
-                    let success = try await CloudKitSyncService.shared.handleModelDeletion(transaction)
-                    if success {
-                        modelContext.delete(transaction)
-                    }
-                }
-                
-                // Finally delete the account
-                let success = try await CloudKitSyncService.shared.handleModelDeletion(account)
-                if success {
-                    modelContext.delete(account)
-                    try modelContext.save()
-                }
-            } catch {
-                print("Error deleting account: \(error)")
+        // First handle any scheduled transactions
+        let scheduledTransactions = transactions.filter { 
+            $0.account?.id == account.id && 
+            $0.schedule != nil 
+        }
+        
+        // Delete schedules first to avoid orphaned schedules
+        for transaction in scheduledTransactions {
+            if let schedule = transaction.schedule {
+                modelContext.delete(schedule)
+                transaction.schedule = nil
             }
         }
+        
+        // The account and its associated transactions will be deleted automatically
+        modelContext.delete(account)
+        
+        try? modelContext.save()
+        HapticManager.shared.notification(type: .success)
+        dismiss()
     }
 } 

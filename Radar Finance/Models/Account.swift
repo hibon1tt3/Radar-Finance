@@ -11,8 +11,6 @@ final class Account: Identifiable {
     var color: String
     var isDefault: Bool
     var startingBalance: Decimal
-    var modificationDate: Date?
-    var lastSyncDate: Date?
     
     @Relationship(deleteRule: .cascade, inverse: \Transaction.account)
     var transactions: [Transaction]

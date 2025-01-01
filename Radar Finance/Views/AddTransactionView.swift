@@ -28,8 +28,6 @@ struct AddTransactionView: View {
     
     let transactionType: TransactionType
     
-    @EnvironmentObject private var viewModel: AppState
-    
     init(transactionType: TransactionType = .expense) {
         self._selectedType = State(initialValue: transactionType)
         self.transactionType = transactionType
