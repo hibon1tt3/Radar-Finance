@@ -6,6 +6,7 @@ struct ExpenseView: View {
     @Query private var transactions: [Transaction]
     @State private var showingAddExpense = false
     @State private var selectedTransaction: Transaction?
+    @EnvironmentObject private var viewModel: AppState
     
     var activeTransactions: [Transaction] {
         transactions.filter { transaction in
@@ -49,6 +50,20 @@ struct ExpenseView: View {
             .sheet(item: $selectedTransaction) { transaction in
                 EditTransactionView(transaction: transaction)
                     .modelContainer(modelContext.container)
+            }
+            .overlay {
+                if viewModel.isSyncing {
+                    ProgressView("Syncing...")
+                }
+            }
+            .alert("Sync Error", isPresented: .constant(viewModel.syncError != nil)) {
+                Button("OK") {
+                    viewModel.syncError = nil
+                }
+            } message: {
+                if let error = viewModel.syncError {
+                    Text(error.localizedDescription)
+                }
             }
         }
     }

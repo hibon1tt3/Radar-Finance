@@ -7,6 +7,7 @@ struct TransactionDetailView: View {
     let transaction: Transaction
     @State private var showingImage = false // For full-screen image view
     @State private var showingDeleteAlert = false
+    @EnvironmentObject private var viewModel: AppState
     
     var body: some View {
         NavigationStack {
@@ -141,5 +142,32 @@ struct ZoomableImageView: View {
                 )
         }
         .background(Color(.systemBackground))
+    }
+}
+
+struct CategoryPicker: View {
+    @Binding var selectedCategory: Category?
+    @Query private var categories: [Category]
+    let transactionType: TransactionType
+    
+    var body: some View {
+        Picker("Category", selection: $selectedCategory) {
+            Text("None").tag(nil as Category?)
+            
+            // Show both system and custom categories, grouped by type
+            ForEach(categories.filter { $0.type == transactionType }) { category in
+                HStack {
+                    Image(systemName: category.icon)
+                        .foregroundColor(Color(hex: category.color))
+                    Text(category.name)
+                    if category.isSystem {
+                        Spacer()
+                        Text("System")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }.tag(category as Category?)
+            }
+        }
     }
 } 

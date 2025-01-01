@@ -5,6 +5,7 @@ struct ReportsView: View {
     @Query private var accounts: [Account]
     @State private var destinationView: ReportDestination?
     @State private var navigateToAccounts = false
+    @EnvironmentObject private var viewModel: AppState
     
     private enum ReportDestination: Identifiable {
         case ledger, cashFlow, spending, projections, calendar
@@ -152,6 +153,20 @@ struct ReportsView: View {
             }
             .navigationDestination(isPresented: $navigateToAccounts) {
                 AccountListView()
+            }
+            .overlay {
+                if viewModel.isSyncing {
+                    ProgressView("Syncing...")
+                }
+            }
+            .alert("Sync Error", isPresented: .constant(viewModel.syncError != nil)) {
+                Button("OK") {
+                    viewModel.syncError = nil
+                }
+            } message: {
+                if let error = viewModel.syncError {
+                    Text(error.localizedDescription)
+                }
             }
         }
     }

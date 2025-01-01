@@ -15,7 +15,12 @@ struct SettingsView: View {
     @EnvironmentObject private var authService: AuthenticationService
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var cameraManager: CameraPermissionManager
+    @EnvironmentObject private var viewModel: AppState
+    @State private var showingAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
     var selectedTab: SettingsTab = .accounts
+    @State private var isSyncing = false
     
     var body: some View {
         NavigationStack {
@@ -68,6 +73,32 @@ struct SettingsView: View {
                         showingResetAlert = true
                     }
                 }
+                
+                Section("Sync") {
+                    Button(action: {
+                        isSyncing = true
+                        viewModel.syncData()
+                    }) {
+                        HStack {
+                            Text("Sync Now")
+                            Spacer()
+                            if isSyncing {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                        }
+                    }
+                    .disabled(isSyncing)
+                    
+                    if let lastSync = viewModel.lastSyncDate {
+                        HStack {
+                            Text("Last Synced")
+                            Spacer()
+                            Text(lastSync, style: .relative)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
             }
             .navigationTitle("Settings")
             .alert("Reset App Data", isPresented: $showingResetAlert) {
@@ -101,6 +132,14 @@ struct SettingsView: View {
                     }
                 )
             }
+            .alert(alertTitle, isPresented: $showingAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(alertMessage)
+            }
+            .onChange(of: viewModel.isSyncing) { _, newValue in
+                isSyncing = newValue
+            }
         }
     }
     
@@ -117,10 +156,29 @@ struct SettingsView: View {
         // Save changes
         try? modelContext.save()
         
-        // Recreate default categories
-        CategoryService.createDefaultCategories(in: modelContext)
+        // Recreate system categories
+        CategoryService.createSystemCategories(in: modelContext)
         
         // Dismiss to return to onboarding
         dismiss()
+    }
+    
+    private func resetCategories() {
+        // Delete all existing categories
+        let descriptor = FetchDescriptor<Category>()
+        if let categories = try? modelContext.fetch(descriptor) {
+            for category in categories {
+                modelContext.delete(category)
+            }
+        }
+        
+        // Create system categories
+        CategoryService.createSystemCategories(in: modelContext)
+        try? modelContext.save()
+        
+        // Show success message
+        showingAlert = true
+        alertTitle = "Success"
+        alertMessage = "Categories have been reset to defaults."
     }
 } 

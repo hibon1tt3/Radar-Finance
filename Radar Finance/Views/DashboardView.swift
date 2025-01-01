@@ -16,6 +16,7 @@ struct DashboardView: View {
     @State private var showingQuickTransactionSheet = false
     @State private var quickTransactionSheet: QuickTransactionSheet?
     @State private var upcomingTransactions: [TransactionOccurrence] = []
+    @EnvironmentObject private var viewModel: AppState
     
     // Create a struct to hold both transaction and date
     private struct TransactionToComplete: Identifiable {
@@ -417,6 +418,20 @@ struct DashboardView: View {
         }
         .onChange(of: transactions) { _, _ in
             updateUpcomingTransactions()
+        }
+        .overlay {
+            if viewModel.isSyncing {
+                ProgressView("Syncing...")
+            }
+        }
+        .alert("Sync Error", isPresented: .constant(viewModel.syncError != nil)) {
+            Button("OK") {
+                viewModel.syncError = nil
+            }
+        } message: {
+            if let error = viewModel.syncError {
+                Text(error.localizedDescription)
+            }
         }
     }
 } 

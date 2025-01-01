@@ -23,8 +23,11 @@ struct CategoryListView: View {
                 .onDelete { indexSet in
                     let incomeCategories = categories.filter { $0.type == .income }
                     for index in indexSet {
-                        categoryToDelete = incomeCategories[index]
-                        showingDeleteAlert = true
+                        let category = incomeCategories[index]
+                        if !category.isSystem {  // Only allow deletion of non-system categories
+                            categoryToDelete = category
+                            showingDeleteAlert = true
+                        }
                     }
                 }
             }
@@ -40,8 +43,11 @@ struct CategoryListView: View {
                 .onDelete { indexSet in
                     let expenseCategories = categories.filter { $0.type == .expense }
                     for index in indexSet {
-                        categoryToDelete = expenseCategories[index]
-                        showingDeleteAlert = true
+                        let category = expenseCategories[index]
+                        if !category.isSystem {  // Only allow deletion of non-system categories
+                            categoryToDelete = category
+                            showingDeleteAlert = true
+                        }
                     }
                 }
             }
@@ -98,6 +104,13 @@ struct CategoryRow: View {
                 .frame(width: 32)
             
             Text(category.name)
+            
+            if category.isSystem {
+                Spacer()
+                Text("System")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
     }
 } 
