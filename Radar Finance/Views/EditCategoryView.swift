@@ -82,4 +82,13 @@ struct EditCategoryView: View {
             }
         }
     }
+    
+    private func deleteCategory() {
+        Task {
+            try? await CloudKitSyncService.shared.handleModelDeletion(category)
+        }
+        modelContext.delete(category)
+        try? modelContext.save()
+        dismiss()
+    }
 } 

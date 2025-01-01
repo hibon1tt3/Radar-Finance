@@ -11,6 +11,8 @@ final class Transaction: Identifiable {
     var status: TransactionStatus
     var date: Date
     var notes: String?
+    var modificationDate: Date?
+    var lastSyncDate: Date?
     
     @Relationship(deleteRule: .nullify) var category: Category?
     @Relationship(deleteRule: .nullify) var account: Account?
@@ -51,6 +53,8 @@ final class Transaction: Identifiable {
         self.date = date
         self.notes = notes
         self.receiptImage = receiptImage
+        self.modificationDate = Date()
+        self.lastSyncDate = nil
     }
     
     var nextOccurrence: Date? {

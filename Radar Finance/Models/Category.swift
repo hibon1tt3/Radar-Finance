@@ -9,6 +9,7 @@ final class Category {
     var icon: String
     var color: String
     var isSystem: Bool  // New property to identify system categories
+    var modificationDate: Date? // Add this property
     
     init(
         id: UUID = UUID(),
@@ -24,6 +25,7 @@ final class Category {
         self.icon = icon
         self.color = color
         self.isSystem = isSystem
+        self.modificationDate = Date() // Set initial modification date
     }
 }
 
