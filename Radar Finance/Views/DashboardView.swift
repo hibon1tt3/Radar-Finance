@@ -133,7 +133,7 @@ struct DashboardView: View {
                             .font(.subheadline)
                         
                         if let category = occurrence.transaction?.category {
-                            Label(category.name, systemImage: category.icon)
+                            Label(category.rawValue, systemImage: category.icon)
                                 .font(.caption)
                                 .foregroundColor(Color(hex: category.color))
                         }
@@ -323,7 +323,7 @@ struct DashboardView: View {
                                                         .foregroundColor(.primary)
                                                     
                                                     if let category = transaction.category {
-                                                        Label(category.name, systemImage: category.icon)
+                                                        Label(category.rawValue, systemImage: category.icon)
                                                             .font(.subheadline)
                                                             .foregroundColor(Color(hex: category.color))
                                                     }

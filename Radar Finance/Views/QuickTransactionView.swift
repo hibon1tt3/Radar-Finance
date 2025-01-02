@@ -6,17 +6,15 @@ struct QuickTransactionView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Account.name) private var accounts: [Account]
-    @Query private var categories: [Category]
     
     let transactionType: TransactionType
     
     @State private var title = ""
     @State private var amountString = ""
     @State private var date = Date()
-    @State private var categorySelection: CategorySelection = .none
+    @State private var selectedCategory: Category?
     @State private var selectedAccount: Account?
     @State private var notes = ""
-    @State private var showingAddCategory = false
     @State private var navigateToAccounts = false
     @State private var showingCamera = false
     @State private var receiptImage: UIImage?
@@ -25,19 +23,6 @@ struct QuickTransactionView: View {
     
     private var defaultAccount: Account? {
         accounts.first { $0.isDefault } ?? accounts.first
-    }
-    
-    enum CategorySelection: Hashable {
-        case none
-        case new
-        case existing(Category)
-        
-        var category: Category? {
-            if case .existing(let category) = self {
-                return category
-            }
-            return nil
-        }
     }
     
     var body: some View {
@@ -65,22 +50,12 @@ struct QuickTransactionView: View {
                             
                             DatePicker("Date", selection: $date, displayedComponents: .date)
                             
-                            Picker("Category", selection: $categorySelection) {
-                                Text("None").tag(CategorySelection.none)
-                                Text("New Category").tag(CategorySelection.new)
-                                
-                                ForEach(categories.filter { $0.type == transactionType }) { category in
-                                    HStack {
-                                        Label(category.name, systemImage: category.icon)
-                                            .foregroundColor(Color(hex: category.color))
-                                    }.tag(CategorySelection.existing(category))
-                                }
-                            }
-                            .onChange(of: categorySelection) { oldValue, newValue in
-                                if case .new = newValue {
-                                    showingAddCategory = true
-                                    // Reset selection to previous value
-                                    categorySelection = oldValue
+                            Picker("Category", selection: $selectedCategory) {
+                                Text("None").tag(nil as Category?)
+                                ForEach(Category.categories(for: transactionType)) { category in
+                                    Label(category.rawValue, systemImage: category.icon)
+                                        .foregroundColor(Color(hex: category.color))
+                                        .tag(category as Category?)
                                 }
                             }
                             
@@ -147,10 +122,6 @@ struct QuickTransactionView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingAddCategory) {
-                AddCategoryView(presetType: transactionType)
-                    .modelContainer(modelContext.container)
-            }
             .fullScreenCover(isPresented: $showingCamera) {
                 CameraView(image: $receiptImage)
                     .ignoresSafeArea()
@@ -173,7 +144,7 @@ struct QuickTransactionView: View {
             title: title,
             amount: amount,
             isEstimated: false,
-            category: categorySelection.category,
+            category: selectedCategory,
             account: selectedAccount,
             type: transactionType,
             schedule: nil,

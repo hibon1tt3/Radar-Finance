@@ -27,7 +27,7 @@ struct CompleteTransactionView: View {
                             .font(.headline)
                         
                         if let category = transaction.category {
-                            Label(category.name, systemImage: category.icon)
+                            Label(category.rawValue, systemImage: category.icon)
                                 .foregroundColor(Color(hex: category.color))
                         }
                     }

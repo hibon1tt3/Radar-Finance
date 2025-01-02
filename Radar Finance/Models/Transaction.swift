@@ -12,7 +12,18 @@ final class Transaction: Identifiable {
     var date: Date
     var notes: String?
     
-    @Relationship(deleteRule: .nullify) var category: Category?
+    var categoryId: String?
+    
+    var category: Category? {
+        get {
+            guard let categoryId = categoryId else { return nil }
+            return Category(rawValue: categoryId)
+        }
+        set {
+            categoryId = newValue?.rawValue
+        }
+    }
+    
     @Relationship(deleteRule: .nullify) var account: Account?
     @Relationship(deleteRule: .cascade) var schedule: Schedule?
     
@@ -41,9 +52,9 @@ final class Transaction: Identifiable {
     ) {
         self.id = id
         self.title = title
-        self.amount = amount.isNaN || amount.isInfinite ? Decimal.zero : amount
+        self.amount = amount
         self.isEstimated = isEstimated
-        self.category = category
+        self.categoryId = category?.rawValue
         self.account = account
         self.type = type
         self.schedule = schedule

@@ -4,7 +4,6 @@ import SwiftData
 struct AddTransactionView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query private var categories: [Category]
     @Query private var accounts: [Account]
     
     @State private var title = ""
@@ -18,7 +17,6 @@ struct AddTransactionView: View {
     @State private var frequency = Frequency.monthly
     @State private var startDate = Date()
     @State private var showingAddCategory = false
-    @State private var categorySelection: CategorySelection = .none
     @State private var firstMonthlyDate = 1
     @State private var secondMonthlyDate = 15
     @State private var dueDate = Date()
@@ -35,19 +33,6 @@ struct AddTransactionView: View {
     
     private var defaultAccount: Account? {
         accounts.first { $0.isDefault }
-    }
-    
-    enum CategorySelection: Hashable {
-        case none
-        case new
-        case existing(Category)
-        
-        var category: Category? {
-            if case .existing(let category) = self {
-                return category
-            }
-            return nil
-        }
     }
     
     private var safeAmount: Decimal? {
@@ -83,24 +68,13 @@ struct AddTransactionView: View {
                             Toggle("Estimated Amount", isOn: $isEstimated)
                         }
                         
-                        Picker("Category", selection: $categorySelection) {
-                            Text("None").tag(CategorySelection.none)
-                            Text("New Category").tag(CategorySelection.new)
-                            
-                            ForEach(categories.filter { $0.type == selectedType }) { category in
-                                HStack {
-                                    Label(category.name, systemImage: category.icon)
-                                        .foregroundColor(Color(hex: category.color))
-                                }.tag(CategorySelection.existing(category))
+                        Picker("Category", selection: $selectedCategory) {
+                            Text("None").tag(nil as Category?)
+                            ForEach(Category.categories(for: selectedType)) { category in
+                                Label(category.rawValue, systemImage: category.icon)
+                                    .foregroundColor(Color(hex: category.color))
+                                    .tag(category as Category?)
                             }
-                        }
-                        .onChange(of: categorySelection) { oldValue, newValue in
-                            if case .new = newValue {
-                                showingAddCategory = true
-                                // Reset selection to previous value
-                                categorySelection = oldValue
-                            }
-                            selectedCategory = newValue.category
                         }
                         
                         Picker("Account", selection: $selectedAccount) {
@@ -174,10 +148,6 @@ struct AddTransactionView: View {
             }
             .navigationDestination(isPresented: $navigateToAccounts) {
                 AccountListView()
-            }
-            .sheet(isPresented: $showingAddCategory) {
-                AddCategoryView(presetType: transactionType)
-                    .modelContainer(modelContext.container)
             }
             .onAppear {
                 if selectedAccount == nil {

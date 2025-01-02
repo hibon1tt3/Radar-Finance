@@ -26,7 +26,6 @@ struct Radar_CheckbookApp: App {
         let schema = Schema([
             Account.self,
             Transaction.self,
-            Category.self,
             Schedule.self
         ])
         
@@ -41,8 +40,6 @@ struct Radar_CheckbookApp: App {
                 for: schema,
                 configurations: [modelConfiguration]
             )
-            // Create default categories if none exist
-            CategoryService.createDefaultCategories(in: container.mainContext)
         } catch {
             fatalError("Could not initialize ModelContainer")
         }

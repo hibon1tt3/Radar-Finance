@@ -59,7 +59,7 @@ struct SpendingView: View {
             
             // Group by category and calculate percentages
             let expensesByCategory = Dictionary(grouping: monthTransactions) { 
-                $0.category?.name ?? "Uncategorized"
+                $0.category?.rawValue ?? "Uncategorized"
             }
             
             // Calculate spending for each category

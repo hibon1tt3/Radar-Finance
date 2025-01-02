@@ -3,7 +3,6 @@ import SwiftData
 
 enum SettingsTab {
     case accounts
-    case categories
     case security
 }
 
@@ -23,8 +22,6 @@ struct SettingsView: View {
                 Section("Manage") {
                     NavigationLink("Accounts", destination: AccountListView())
                         .tag(SettingsTab.accounts)
-                    NavigationLink("Categories", destination: CategoryListView())
-                        .tag(SettingsTab.categories)
                 }
                 
                 Section("Security") {
@@ -111,16 +108,7 @@ struct SettingsView: View {
         // Delete all accounts
         try? modelContext.delete(model: Account.self)
         
-        // Delete all categories
-        try? modelContext.delete(model: Category.self)
-        
         // Save changes
         try? modelContext.save()
-        
-        // Recreate default categories
-        CategoryService.createDefaultCategories(in: modelContext)
-        
-        // Dismiss to return to onboarding
-        dismiss()
     }
 } 

@@ -38,7 +38,7 @@ struct EditTransactionView: View {
                     
                     if let category = transaction.category {
                         HStack {
-                            Label(category.name, systemImage: category.icon)
+                            Label(category.rawValue, systemImage: category.icon)
                                 .foregroundColor(Color(hex: category.color))
                             Spacer()
                             Text("Category")

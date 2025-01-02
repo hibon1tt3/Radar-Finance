@@ -19,7 +19,7 @@ struct TransactionRowView: View {
                 
                 if let category = transaction.category {
                     Label {
-                        Text(category.name)
+                        Text(category.rawValue)
                             .font(.caption)
                             .foregroundColor(Color(hex: category.color))
                     } icon: {
