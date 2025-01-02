@@ -15,8 +15,12 @@ final class Account: Identifiable {
     @Relationship(deleteRule: .cascade, inverse: \Transaction.account)
     var transactions: [Transaction]
     
+    private static func sanitizeBalance(_ value: Decimal) -> Decimal {
+        value.isNaN || value.isInfinite ? Decimal.zero : value
+    }
+    
     var safeBalance: Decimal {
-        return balance.isNaN || balance.isInfinite ? Decimal.zero : balance
+        Self.sanitizeBalance(balance)
     }
     
     init(
@@ -32,7 +36,7 @@ final class Account: Identifiable {
         self.id = id
         self.name = name
         self.type = type
-        self.balance = balance.isNaN || balance.isInfinite ? Decimal.zero : balance
+        self.balance = Self.sanitizeBalance(balance)
         self.icon = icon
         self.color = color
         self.isDefault = isDefault

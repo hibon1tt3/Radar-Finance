@@ -1,11 +1,6 @@
 import SwiftUI
 import SwiftData
 
-enum SettingsTab {
-    case accounts
-    case security
-}
-
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showingResetAlert = false
@@ -14,14 +9,12 @@ struct SettingsView: View {
     @EnvironmentObject private var authService: AuthenticationService
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var cameraManager: CameraPermissionManager
-    var selectedTab: SettingsTab = .accounts
     
     var body: some View {
         NavigationStack {
             List {
                 Section("Manage") {
                     NavigationLink("Accounts", destination: AccountListView())
-                        .tag(SettingsTab.accounts)
                 }
                 
                 Section("Security") {
