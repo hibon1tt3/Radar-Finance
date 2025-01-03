@@ -2,11 +2,30 @@ import SwiftUI
 import SwiftData
 
 struct TransactionDetailView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    let transaction: Transaction
-    @State private var showingImage = false // For full-screen image view
-    @State private var showingDeleteAlert = false
+    @Environment(\.modelContext) private var modelContext
+    @Query private var accounts: [Account]
+    @EnvironmentObject private var cameraManager: CameraPermissionManager
+    @Bindable var transaction: Transaction
+    
+    @State private var amountString: String
+    @State private var selectedAccount: Account?
+    @State private var completionDate: Date
+    @State private var showingCamera = false
+    @State private var showingImage = false
+    @State private var receiptImage: UIImage?
+    
+    init(transaction: Transaction) {
+        self.transaction = transaction
+        self._amountString = State(initialValue: String(describing: transaction.amount))
+        self._selectedAccount = State(initialValue: transaction.account)
+        self._completionDate = State(initialValue: transaction.date)
+        
+        if let imageData = transaction.receiptImage,
+           let image = UIImage(data: imageData) {
+            self._receiptImage = State(initialValue: image)
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -22,18 +41,47 @@ struct TransactionDetailView: View {
                 }
                 
                 Section {
-                    LabeledContent("Amount") {
-                        Text(transaction.amount.formatted(.currency(code: "USD")))
-                            .foregroundColor(transaction.type == .income ? .green : .red)
+                    HStack {
+                        Text("$")
+                        CustomTextField(
+                            text: $amountString,
+                            placeholder: "Amount",
+                            keyboardType: .decimalPad
+                        )
                     }
                     
-                    LabeledContent("Date") {
-                        Text(transaction.date.formatted(date: .abbreviated, time: .omitted))
-                    }
+                    DatePicker(
+                        transaction.type == .expense ? "Date Paid" : "Date Received",
+                        selection: $completionDate,
+                        displayedComponents: .date
+                    )
                     
-                    if let account = transaction.account {
-                        LabeledContent("Account") {
-                            Text(account.name)
+                    Picker("Account", selection: $selectedAccount) {
+                        Text("None").tag(nil as Account?)
+                        ForEach(accounts) { account in
+                            Text(account.name).tag(account as Account?)
+                        }
+                    }
+                }
+                
+                if cameraManager.isCameraEnabled && cameraManager.isCameraAvailable {
+                    Section("Receipt") {
+                        if let image = receiptImage {
+                            Button(action: { showingImage = true }) {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxHeight: 200)
+                            }
+                        }
+                        
+                        Button(action: {
+                            showingCamera = true
+                        }) {
+                            Label(
+                                receiptImage == nil ? "Take Photo" : "Retake Photo",
+                                systemImage: "camera"
+                            )
                         }
                     }
                 }
@@ -43,40 +91,36 @@ struct TransactionDetailView: View {
                         Text(notes)
                     }
                 }
-                
-                if let imageData = transaction.receiptImage,
-                   let uiImage = UIImage(data: imageData) {
-                    Section("Receipt") {
-                        Button(action: { showingImage = true }) {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxHeight: 200)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
-                    }
-                }
-                
-                Section {
-                    Button("Delete Transaction", role: .destructive) {
-                        showingDeleteAlert = true
-                    }
-                }
             }
             .navigationTitle(transaction.type == .income ? "Income Details" : "Expense Details")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
+                    Button("Cancel") {
                         dismiss()
                     }
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                Button(action: updateTransaction) {
+                    Text("Update Transaction")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(transaction.type == .expense ? Color.red : Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding()
+            }
+        }
+        .fullScreenCover(isPresented: $showingCamera) {
+            CameraView(image: $receiptImage)
+                .ignoresSafeArea()
         }
         .fullScreenCover(isPresented: $showingImage) {
-            if let imageData = transaction.receiptImage,
-               let uiImage = UIImage(data: imageData) {
+            if let image = receiptImage {
                 NavigationStack {
-                    ZoomableImageView(image: uiImage)
+                    ZoomableImageView(image: image)
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
@@ -88,27 +132,49 @@ struct TransactionDetailView: View {
                 }
             }
         }
-        .alert("Delete Transaction", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
-                deleteTransaction()
-            }
-        } message: {
-            Text("Are you sure you want to delete this transaction? This action cannot be undone.")
-        }
     }
     
-    private func deleteTransaction() {
-        // Revert the balance change
-        if let account = transaction.account {
-            if transaction.type == .income {
-                account.balance -= transaction.amount
+    private func updateTransaction() {
+        // Update amount if valid
+        if let newAmount = Decimal(string: amountString) {
+            // Handle account balance updates
+            if transaction.account != selectedAccount {
+                // Reverse the transaction from the old account
+                if let oldAccount = transaction.account {
+                    if transaction.type == .income {
+                        oldAccount.balance -= transaction.amount
+                    } else {
+                        oldAccount.balance += transaction.amount
+                    }
+                }
+                
+                // Apply the transaction to the new account
+                if let newAccount = selectedAccount {
+                    if transaction.type == .income {
+                        newAccount.balance += newAmount
+                    } else {
+                        newAccount.balance -= newAmount
+                    }
+                }
+                
+                transaction.account = selectedAccount
             } else {
-                account.balance += transaction.amount
+                // Update balance for the same account with new amount
+                if let account = selectedAccount {
+                    if transaction.type == .income {
+                        account.balance += (newAmount - transaction.amount)
+                    } else {
+                        account.balance -= (newAmount - transaction.amount)
+                    }
+                }
             }
+            
+            transaction.amount = newAmount
         }
         
-        modelContext.delete(transaction)
+        transaction.date = completionDate
+        transaction.receiptImage = receiptImage?.jpegData(compressionQuality: 0.8)
+        
         try? modelContext.save()
         HapticManager.shared.notification(type: .success)
         dismiss()

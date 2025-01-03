@@ -5,10 +5,26 @@ struct TransactionRowView: View {
     var showOccurrenceDate = false
     var occurrenceDate: Date?
     var balance: Decimal?
+    var showSchedule = false
+    var showCompletionDate = false
     
     private var displayAmount: Decimal {
         // Make expense amounts negative
         transaction.type == .expense ? -transaction.amount : transaction.amount
+    }
+    
+    private var scheduleText: String? {
+        guard showSchedule, let schedule = transaction.schedule else { return nil }
+        if schedule.frequency == .twiceMonthly {
+            return "Monthly on \(schedule.firstMonthlyDate ?? 1) and \(schedule.secondMonthlyDate ?? 15)"
+        } else {
+            return "\(schedule.frequency.description) from \(schedule.startDate.formatted(date: .abbreviated, time: .omitted))"
+        }
+    }
+    
+    private var dateText: String? {
+        guard showCompletionDate else { return nil }
+        return "\(transaction.type == .expense ? "Paid" : "Received") \(transaction.date.formatted(date: .abbreviated, time: .omitted))"
     }
     
     var body: some View {
@@ -42,7 +58,15 @@ struct TransactionRowView: View {
                     .font(.headline)
                     .foregroundColor(transaction.type == .income ? .green : .red)
                 
-                if let balance = balance {
+                if let scheduleText = scheduleText {
+                    Text(scheduleText)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else if let dateText = dateText {
+                    Text(dateText)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else if let balance = balance {
                     Text(balance.formatted(.currency(code: "USD")))
                         .font(.caption)
                         .foregroundColor(.secondary)
