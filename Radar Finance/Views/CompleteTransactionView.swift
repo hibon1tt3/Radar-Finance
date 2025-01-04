@@ -139,6 +139,10 @@ struct CompleteTransactionView: View {
                     .ignoresSafeArea()
             }
         }
+        .environment(\.sizeCategory, .medium)
+        .dynamicTypeSize(.medium)
+        .environment(\.legibilityWeight, .regular)
+        .fontWeight(.regular)
     }
     
     private func completeTransaction() {
