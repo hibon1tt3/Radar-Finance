@@ -14,10 +14,43 @@ struct TransactionRowView: View {
     }
     
     private var scheduleText: String? {
-        guard showSchedule, let schedule = transaction.schedule else { return nil }
-        if schedule.frequency == .twiceMonthly {
-            return "Monthly on \(schedule.firstMonthlyDate ?? 1) and \(schedule.secondMonthlyDate ?? 15)"
-        } else {
+        guard showSchedule else { return nil }
+        
+        // If it's not a recurring transaction but has a status of pending, show the due date
+        if transaction.schedule == nil && transaction.status == .pending {
+            return "Due \(transaction.date.formatted(date: .abbreviated, time: .omitted))"
+        }
+        
+        // Handle recurring schedules
+        guard let schedule = transaction.schedule else { return nil }
+        
+        let calendar = Calendar.current
+        
+        switch schedule.frequency {
+        case .twiceMonthly:
+            return "Monthly on \(schedule.firstMonthlyDate?.ordinal ?? "1st") and \(schedule.secondMonthlyDate?.ordinal ?? "15th")"
+            
+        case .monthly:
+            let day = calendar.component(.day, from: schedule.startDate)
+            return "Monthly on the \(day.ordinal)"
+            
+        case .weekly:
+            let weekday = calendar.component(.weekday, from: schedule.startDate)
+            let weekdayName = calendar.weekdaySymbols[weekday - 1]
+            return "Weekly on \(weekdayName)"
+            
+        case .biweekly:
+            let weekday = calendar.component(.weekday, from: schedule.startDate)
+            let weekdayName = calendar.weekdaySymbols[weekday - 1]
+            return "Biweekly on \(weekdayName)"
+            
+        case .annual:
+            let month = calendar.component(.month, from: schedule.startDate)
+            let day = calendar.component(.day, from: schedule.startDate)
+            let monthName = calendar.monthSymbols[month - 1]
+            return "Yearly on \(monthName) \(day.ordinal)"
+
+        default:
             return "\(schedule.frequency.description) from \(schedule.startDate.formatted(date: .abbreviated, time: .omitted))"
         }
     }
@@ -33,17 +66,10 @@ struct TransactionRowView: View {
                 Text(transaction.title)
                     .font(.headline)
                 
-                if let category = transaction.category {
-                    Label {
-                        Text(category.rawValue)
-                            .font(.caption)
-                            .foregroundColor(Color(hex: category.color))
-                    } icon: {
-                        Image(systemName: category.icon)
-                            .foregroundColor(Color(hex: category.color))
-                    }
-                    .labelStyle(.titleAndIcon)
-                    .imageScale(.small)
+                if let dateText = dateText {
+                    Text(dateText)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 } else if let account = transaction.account {
                     Text(account.name)
                         .font(.subheadline)
@@ -58,16 +84,12 @@ struct TransactionRowView: View {
                     .font(.headline)
                     .foregroundColor(transaction.type == .income ? .green : .red)
                 
-                if let scheduleText = scheduleText {
+                if showSchedule, let scheduleText = scheduleText {
                     Text(scheduleText)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                } else if let dateText = dateText {
-                    Text(dateText)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 } else if let balance = balance {
-                    Text(balance.formatted(.currency(code: "USD")))
+                    Text("Balance: \(balance.formatted(.currency(code: "USD")))")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

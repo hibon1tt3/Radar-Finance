@@ -19,10 +19,18 @@ struct Radar_CheckbookApp: App {
                 .modelContainer(container)
                 .environmentObject(authService)
                 .preferredColorScheme(.light)
+                .environment(\.sizeCategory, .medium)
+                .dynamicTypeSize(.medium)
+                .environment(\.legibilityWeight, .regular)
+                .fontWeight(.regular)
         }
     }
     
     init() {
+        UILabel.appearance().adjustsFontForContentSizeCategory = false
+        UITextField.appearance().adjustsFontForContentSizeCategory = false
+        UITextView.appearance().adjustsFontForContentSizeCategory = false
+        
         let schema = Schema([
             Account.self,
             Transaction.self,

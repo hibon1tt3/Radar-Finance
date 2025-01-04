@@ -32,6 +32,5 @@ struct ContentView: View {
         }
         .environmentObject(authService)
         .preferredColorScheme(.light)
-        .dynamicTypeSize(.large)
     }
 } 

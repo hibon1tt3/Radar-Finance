@@ -92,7 +92,8 @@ struct TransactionDetailView: View {
                     }
                 }
             }
-            .navigationTitle(transaction.type == .income ? "Income Details" : "Expense Details")
+            .navigationTitle("Transaction Details")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -113,6 +114,10 @@ struct TransactionDetailView: View {
                 .padding()
             }
         }
+        .environment(\.sizeCategory, .medium)
+        .dynamicTypeSize(.medium)
+        .environment(\.legibilityWeight, .regular)
+        .fontWeight(.regular)
         .fullScreenCover(isPresented: $showingCamera) {
             CameraView(image: $receiptImage)
                 .ignoresSafeArea()

@@ -149,10 +149,12 @@ struct AddTransactionView: View {
             .navigationDestination(isPresented: $navigateToAccounts) {
                 AccountListView()
             }
-            .onAppear {
-                if selectedAccount == nil {
-                    selectedAccount = defaultAccount
-                }
+        }
+        .environment(\.sizeCategory, .medium)
+        .dynamicTypeSize(.medium)
+        .onAppear {
+            if selectedAccount == nil {
+                selectedAccount = defaultAccount
             }
         }
     }

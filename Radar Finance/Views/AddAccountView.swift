@@ -95,17 +95,18 @@ struct AddAccountView: View {
                 }
             }
             .navigationTitle("Add Account")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         saveAccount()
                     }
-                    .disabled(name.isEmpty)
+                    .disabled(name.isEmpty || balanceString.isEmpty)
                 }
             }
             .onAppear {
@@ -114,6 +115,8 @@ struct AddAccountView: View {
                 }
             }
         }
+        .environment(\.sizeCategory, .medium)
+        .dynamicTypeSize(.medium)
     }
     
     private func saveAccount() {

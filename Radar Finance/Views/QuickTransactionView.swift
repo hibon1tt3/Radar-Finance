@@ -122,14 +122,16 @@ struct QuickTransactionView: View {
                     }
                 }
             }
-            .fullScreenCover(isPresented: $showingCamera) {
-                CameraView(image: $receiptImage)
-                    .ignoresSafeArea()
-            }
-            .onAppear {
-                if selectedAccount == nil && !accounts.isEmpty {
-                    selectedAccount = defaultAccount ?? accounts[0]
-                }
+        }
+        .environment(\.sizeCategory, .medium)
+        .dynamicTypeSize(.medium)
+        .fullScreenCover(isPresented: $showingCamera) {
+            CameraView(image: $receiptImage)
+                .ignoresSafeArea()
+        }
+        .onAppear {
+            if selectedAccount == nil && !accounts.isEmpty {
+                selectedAccount = defaultAccount ?? accounts[0]
             }
         }
     }

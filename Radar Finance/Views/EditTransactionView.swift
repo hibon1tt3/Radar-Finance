@@ -102,6 +102,7 @@ struct EditTransactionView: View {
                 }
             }
             .navigationTitle("Edit \(transaction.type == .income ? "Income" : "Expense")")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -115,6 +116,10 @@ struct EditTransactionView: View {
                 }
             }
         }
+        .environment(\.sizeCategory, .medium)
+        .dynamicTypeSize(.medium)
+        .environment(\.legibilityWeight, .regular)
+        .fontWeight(.regular)
     }
     
     private func saveTransaction() {

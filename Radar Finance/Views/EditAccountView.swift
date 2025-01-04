@@ -104,20 +104,22 @@ struct EditAccountView: View {
                 }
             }
             .navigationTitle("Edit Account")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         try? modelContext.save()
                         dismiss()
                     }
-                    .disabled(account.name.isEmpty)
                 }
             }
         }
+        .environment(\.sizeCategory, .medium)
+        .dynamicTypeSize(.medium)
     }
 } 

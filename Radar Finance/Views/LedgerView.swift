@@ -4,6 +4,8 @@ import SwiftData
 struct LedgerView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
+    @Query private var accounts: [Account]
+    @State private var selectedAccount: Account?
     @State private var selectedTransaction: Transaction?
     @State private var showingQuickTransactionSheet = false
     @State private var quickTransactionSheet: QuickTransactionSheet?
@@ -12,7 +14,13 @@ struct LedgerView: View {
     @State private var indexSetToDelete: IndexSet?
     
     var completedTransactions: [Transaction] {
-        transactions.filter { $0.status == .completed }
+        transactions.filter { transaction in
+            if let selectedAccount = selectedAccount {
+                return transaction.status == .completed && transaction.account?.id == selectedAccount.id
+            } else {
+                return transaction.status == .completed
+            }
+        }
     }
     
     var groupedTransactions: [(String, [Transaction])] {
@@ -25,31 +33,65 @@ struct LedgerView: View {
         return grouped.sorted { $0.0 > $1.0 }
     }
     
+    private func calculateRunningBalance(for transactions: [Transaction]) -> [Transaction: Decimal] {
+        var balanceMap: [Transaction: Decimal] = [:]
+        var runningBalance: [String: Decimal] = [:] // Track balance per account
+        
+        // Sort transactions by date, oldest first
+        let sortedTransactions = transactions.sorted { $0.date < $1.date }
+        
+        for transaction in sortedTransactions {
+            if let account = transaction.account {
+                let amount = transaction.type == .expense ? -transaction.amount : transaction.amount
+                runningBalance[account.name] = (runningBalance[account.name] ?? account.startingBalance) + amount
+                balanceMap[transaction] = runningBalance[account.name]
+            }
+        }
+        
+        return balanceMap
+    }
+    
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(groupedTransactions, id: \.0) { month, transactions in
-                    Section(header: Text(month)) {
-                        ForEach(transactions) { transaction in
-                            Button(action: {
-                                selectedTransaction = transaction
-                            }) {
-                                TransactionRowView(transaction: transaction, showCompletionDate: true)
+            VStack(spacing: 20) {
+                // Account Picker
+                if !accounts.isEmpty {
+                    AccountPickerView(selectedAccount: $selectedAccount)
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(10)
+                        .shadow(radius: 2)
+                        .padding(.horizontal)
+                }
+                
+                // Transactions List
+                List {
+                    ForEach(groupedTransactions, id: \.0) { month, transactions in
+                        Section(header: Text(month)) {
+                            let balanceMap = calculateRunningBalance(for: transactions)
+                            ForEach(transactions) { transaction in
+                                TransactionRowView(
+                                    transaction: transaction,
+                                    balance: balanceMap[transaction],
+                                    showCompletionDate: true
+                                )
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedTransaction = transaction
+                                }
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .listRowInsets(EdgeInsets())
-                        }
-                        .onDelete { indexSet in
-                            indexSetToDelete = indexSet
-                            if let index = indexSet.first {
-                                transactionToDelete = transactions[index]
-                                showingDeleteAlert = true
+                            .onDelete { indexSet in
+                                indexSetToDelete = indexSet
+                                if let index = indexSet.first {
+                                    transactionToDelete = transactions[index]
+                                    showingDeleteAlert = true
+                                }
                             }
                         }
                     }
                 }
+                .scrollContentBackground(.hidden)
             }
-            .scrollContentBackground(.hidden)
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Ledger")
             .toolbar {
